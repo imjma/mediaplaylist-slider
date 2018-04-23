@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,11 +12,12 @@ import (
 	"github.com/grafov/m3u8"
 )
 
+var m3u8File = flag.String("p", "media.m3u8", "Media playist file")
 var segmentsCache []*m3u8.MediaSegment
 
 func main() {
-	m3u8File := "media.m3u8"
-	f, err := os.Open(m3u8File)
+	flag.Parse()
+	f, err := os.Open(*m3u8File)
 	if err != nil {
 		panic(err)
 	}
