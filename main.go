@@ -39,32 +39,45 @@ func main() {
 func mediaHandler(p *m3u8.MediaPlaylist) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !p.Closed && segmentsCache == nil {
-			for _, seg := range p.Segments {
-				if seg == nil {
-					continue
-				}
-				segmentsCache = append(segmentsCache, seg)
-			}
-			segmentsCache[0].Discontinuity = true
-			go func(mediapl *m3u8.MediaPlaylist) {
-				c := time.Tick(3 * time.Second)
-				i := 0
-				for _ = range c {
-					seg := segmentsCache[i]
-					p.Remove()
-					p.AppendSegment(seg)
-					p.ResetCache()
-					i++
-					if i >= len(segmentsCache) {
-						i = 0
-					}
-				}
-			}(p)
+			newSegmentCache(p.Segments)
+			go sliding(p)
 		}
 
-		w.Header()["Content-Type"] = []string{"application/vnd.apple.mpegurl"}
-		w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		io.WriteString(w, fmt.Sprintf("%+v", p))
+	}
+}
+
+// Create segmentCache for sliding.
+func newSegmentCache(segments []*m3u8.MediaSegment) {
+	for _, seg := range segments {
+		if seg == nil {
+			continue
+		}
+		segmentsCache = append(segmentsCache, seg)
+	}
+	// Add Discontinuity to first segment for sliding.
+	segmentsCache[0].Discontinuity = true
+}
+
+// Removes head of chunk and append to the tail.
+func sliding(p *m3u8.MediaPlaylist) {
+	if p.Closed {
+		return
+	}
+	c := time.Tick(3 * time.Second)
+	i := 0
+	for _ = range c {
+		seg := segmentsCache[i]
+		p.Remove()
+		p.AppendSegment(seg)
+		p.ResetCache()
+		i++
+		if i >= len(segmentsCache) {
+			i = 0
+		}
 	}
 }
