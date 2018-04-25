@@ -63,7 +63,7 @@ func newSegmentCache(segments []*m3u8.MediaSegment) {
 	segmentsCache[0].Discontinuity = true
 }
 
-// Removes head of chunk and append to the tail.
+// Removes head of chunk and append to the tail every 3 seconds.
 func sliding(p *m3u8.MediaPlaylist) {
 	if p.Closed {
 		return
@@ -72,12 +72,17 @@ func sliding(p *m3u8.MediaPlaylist) {
 	i := 0
 	for _ = range c {
 		seg := segmentsCache[i]
-		p.Remove()
-		p.AppendSegment(seg)
-		p.ResetCache()
+		slide(p, seg)
 		i++
 		if i >= len(segmentsCache) {
 			i = 0
 		}
 	}
+}
+
+// Removes head of segments and append new to the tail.
+func slide(p *m3u8.MediaPlaylist, segment *m3u8.MediaSegment) {
+	p.Remove()
+	p.AppendSegment(segment)
+	p.ResetCache()
 }
