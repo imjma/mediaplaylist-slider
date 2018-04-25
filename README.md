@@ -9,7 +9,7 @@ Or giving specific playlist file
     go run main.go -p media.m3u8
 
 ### TODO
-- [] More Testing
+- [ ] More Testing
 
 ## Library usage
 
