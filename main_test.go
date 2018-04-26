@@ -26,6 +26,10 @@ func TestMediaHandler(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Fatalf("Received non-200 response: %d\n", resp.StatusCode)
 	}
+
+	if resp.Header.Get("Content-Type") != "application/vnd.apple.mpegurl" {
+		t.Fatalf("Received wrong Content-Type: %s\n", resp.Header.Get("Content-Type"))
+	}
 }
 
 func TestNewSegmentCache(t *testing.T) {
@@ -39,12 +43,11 @@ func TestNewSegmentCache(t *testing.T) {
 	}
 }
 
-func testslide(t *testing.T) {
+func TestSlideOK(t *testing.T) {
 	p := testNewMediaPlaylistStream()
-	newSegmentCache(p.Segments)
-	slide(p, segmentsCache[0])
-	if *p.Segments[len(p.Segments)-1] != *segmentsCache[0] {
-		t.Fatal("slide: append failed")
+	err := slide(p, p.Segments[0])
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

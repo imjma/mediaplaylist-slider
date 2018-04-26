@@ -43,7 +43,6 @@ func mediaHandler(p *m3u8.MediaPlaylist) http.HandlerFunc {
 			go sliding(p)
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -59,8 +58,6 @@ func newSegmentCache(segments []*m3u8.MediaSegment) {
 		}
 		segmentsCache = append(segmentsCache, seg)
 	}
-	// Add Discontinuity to first segment for sliding.
-	segmentsCache[0].Discontinuity = true
 }
 
 // Removes head of chunk and append to the tail every 3 seconds.
@@ -73,6 +70,9 @@ func sliding(p *m3u8.MediaPlaylist) {
 	for _ = range c {
 		seg := segmentsCache[i]
 		slide(p, seg)
+		if i == 0 {
+			p.SetDiscontinuity()
+		}
 		i++
 		if i >= len(segmentsCache) {
 			i = 0
@@ -81,8 +81,14 @@ func sliding(p *m3u8.MediaPlaylist) {
 }
 
 // Removes head of segments and append new to the tail.
-func slide(p *m3u8.MediaPlaylist, segment *m3u8.MediaSegment) {
-	p.Remove()
-	p.AppendSegment(segment)
-	p.ResetCache()
+func slide(p *m3u8.MediaPlaylist, segment *m3u8.MediaSegment) error {
+	err := p.Remove()
+	if err != nil {
+		return err
+	}
+	err = p.AppendSegment(segment)
+	if err != nil {
+		return err
+	}
+	return nil
 }
