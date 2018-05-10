@@ -7,6 +7,8 @@ go:
 
 before_install:
   - go get github.com/grafov/m3u8
+  - go get github.com/mattn/goveralls
 
 script:
   - go test -v
+  - $GOPATH/bin/goveralls -service=travis-ci
