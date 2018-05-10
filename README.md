@@ -14,3 +14,7 @@ Or giving specific playlist file
 ## Library usage
 
 * [m3u8](https://github.com/grafov/m3u8)
+
+### Project Status
+
+[![Coverage Status](https://coveralls.io/repos/github/sthtodo/mediaplaylist-slider/badge.svg?branch=feature%2Fadd-coveralls)](https://coveralls.io/github/sthtodo/mediaplaylist-slider?branch=feature%2Fadd-coveralls)
